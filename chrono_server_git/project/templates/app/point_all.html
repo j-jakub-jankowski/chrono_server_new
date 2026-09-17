@@ -1,0 +1,63 @@
+{% extends 'app/dashboard.html' %}
+
+{% block title %}    
+<title>{{ race.name }}</title>
+{% endblock %}
+
+
+{% block breadcrumb_html %}
+<li class="breadcrumb-item text-white fs-5">
+  <a class="text-white fs-5" href="{% url 'race' race.id %}">
+    {{ race.name }}
+  </a>
+</li>
+<li class="breadcrumb-item text-secondary fs-5">
+Punkty
+</li>
+{% endblock %}
+
+
+{% block content_dashboard %}
+
+<div class="container-fluid">
+  <div class="row justify-content-center g-3">
+    {% for point in points_devices %}
+        <div class="col-auto">
+          <div class="card text-bg-dark border-primary h-100" style="width: 18rem" aria-labelledby="event-{{ race.id }}-title">
+            <header class="card-header border-bottom border-primary">
+              <h4 class="card-title my-2">{{ point.name }}</h4>
+              <div class="d-flex justify-content-between text-secondary my-1">
+                <span>Alias:</span>
+                <strong>{{ point.alias }}</strong>
+              </div>
+              <div class="d-flex justify-content-between text-secondary my-1">
+                <span>Alias ID:</span>
+                <strong>{{ point.alias_id }}</strong>
+              </div>
+            </header>
+            <div class="card-body">
+                <h6>Przypisane urządzenia:</h6>
+                {% for device in point.devices %}
+                  <a class="nav-link d-block ms-3 my-1" href="{% url 'device' device.id %}" aria-label="Punkty{{ device.name }}">{{ device.name }}</a>
+                {% empty %}
+                  <span class="text-light ms-3 my-1">Brak</span>
+                {% endfor %}
+            </div>
+            <div class="card-footer">
+              <div class="d-flex gap-2 p-1">
+                <a href="{% url 'point' race.id point.id %}" class="btn btn-outline-primary" aria-label="Ustawienia {{ point.name }}"><i class="fa-solid fa-gear"></i></a>
+                <a href="{% url 'point_export' race.id point.id %}" class="btn btn-outline-primary" target="_blank" aria-label="Punkty{{ race.name }}">Export</a>
+              </div>
+            </div>
+          </div>
+        </div>
+    {% empty %}
+      <div class="col-12">
+        <div class="alert alert-secondary text-center mb-0">Brak wydarzeń do wyświetlenia.</div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+
+{% endblock %}

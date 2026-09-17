@@ -1,0 +1,38 @@
+{% extends 'app/dashboard.html' %}
+
+{% block title %}    
+<title>{{ control_point.name }}</title>
+{% endblock %}
+
+
+{% block breadcrumb_html %}
+<li class="breadcrumb-item text-white fs-5">
+  <a class="text-white fs-5" href="{% url 'race' race.id %}">
+    {{ race.name }}
+  </a>
+</li>
+<li class="breadcrumb-item text-white fs-5">
+  <a class="text-white fs-5" href="{% url 'point_all' race.id %}">
+    Punkty
+  </a>
+</li>
+<li class="breadcrumb-item text-secondary fs-5">
+{{ control_point.name }}
+</li>
+{% endblock %}
+
+
+{% block content_dashboard %}
+
+<div class="container-fluid">
+
+  TODO: DANE I USTAWIENIE PUNKTU <br>
+  WIDOK URZĄDZEŃ PRZYPISANYCH DO PUNKTU<br>
+
+  EDYCJA PUNKTU (ALIAS, ALIAS ID, NAZWA)<br>
+  EDYCJA URZĄDZEŃ PRZYPISANYCH DO PUNKTU (DODAWANIE, USUWANIE)<br>
+
+</div>
+
+
+{% endblock %}

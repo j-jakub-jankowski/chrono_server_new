@@ -1,0 +1,792 @@
+{% extends 'app/dashboard.html' %}
+
+{% block title %}
+<title>EX: {{ control_point.name }}</title>
+{% endblock %}
+
+
+
+
+{% block breadcrumb_html %}
+<li class="breadcrumb-item text-white fs-5">
+  <a class="text-white fs-5" href="{% url 'race' race.id %}">
+    {{ race.name }}
+  </a>
+</li>
+<li class="breadcrumb-item text-white fs-5">
+  <a class="text-white fs-5" href="{% url 'point_all' race.id %}">
+    Punkty
+  </a>
+</li>
+<li class="breadcrumb-item text-secondary fs-5">
+{{ control_point.name }}
+</li>
+{% endblock %}
+
+
+{% block content_dashboard %}
+
+{{ race|json_script:"race_data" }}
+{{ control_point|json_script:"control_point_data" }}
+{{ devices|json_script:"devices_data" }}
+{{ gunstarts|json_script:"gunstarts_data" }}
+
+
+<div class="container-fluid">
+  <div class="row justify-content-center g-3">
+
+     <!-- PLIK LOGU -->
+    <div class="col-auto">
+      <div class="card text-bg-dark border-primary h-100" style="width: 15rem" aria-labelledby="event--title">
+        <header class="card-header border-bottom border-primary">
+          <h4 class="card-title my-2">Plik</h4>
+        </header>
+        <div class="card-body">
+          <div class="d-flex justify-content-between my-1">
+            <span>Alias:</span>
+            <strong>{{ control_point.alias }}</strong>
+          </div>
+          <div class="d-flex justify-content-between my-1">
+            <span>Alias ID:</span>
+            <strong>{{ control_point.alias_id }}</strong>
+          </div>
+          <div class="d-flex justify-content-between my-1">
+            <span>Nazwa pliku:</span>
+            <strong id="log-file-name">Brak</strong>
+          </div>
+        </div>
+        <div class="card-footer">
+          <div class="d-flex py-1">
+            <button id="selectFile" class="btn btn-outline-primary" aria-label="Wybór ścieżki pliku">
+              Wybierz ścieżkę
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+     <!-- URZĄDZENIA -->
+
+    <div class="col-auto">
+      <div class="card text-bg-dark border-primary h-100" style="width: 25rem" aria-labelledby="event--title">
+        <header class="card-header border-bottom border-primary">
+          <h4 class="card-title my-2">Urządzenia</h4>
+        </header>
+        <div class="card-body">
+          <div id="devices-wrapper">
+            {% for device in devices %}
+                <div class="device-container">
+                    <div class="device-title">
+                        {{ device.device_name }} ({{ device.device_number }})
+                    </div>
+                    <select class="session-select form-select" id="session_select_{{ device.device_id }}">
+                    </select>
+                </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+     <!-- FILTROWANIE -->
+
+    <div class="col-auto">  
+      <div class="card text-bg-dark border-primary h-100" style="width: 25rem" aria-labelledby="event--title">
+        <header class="card-header border-bottom border-primary">
+          <h4 class="card-title my-2">Filtrowanie</h4>
+        </header>
+     
+
+        <div class="card-body">
+          <div class="mb-2">
+            <label for="gunStartSelect" class="form-label">
+                Gun start
+            </label>
+            <select id="gunStartSelect" class="form-select">
+            </select>
+          </div>
+          <div class="input-group mb-2">
+            <span class="input-group-text" id="labelMTBST">MTBST</span>
+            <input type="number" class="form-control" value="300" id="mtbstInput" aria-label="MTBST" aria-describedby="labelMTBST">
+          </div>
+          <div class="input-group mb-2">
+            <span class="input-group-text" id="labelMinTime">MIN Time</span>
+            <input type="number" class="form-control" value="0" id="minTimeInput" aria-label="MIN Time" aria-describedby="labelMinTime" disabled>
+          </div>
+          <div class="input-group mb-2">
+            <span class="input-group-text" id="labelMaxTime">MAX Time</span>
+            <input type="number" class="form-control" value="0" id="maxTimeInput" aria-label="MAX Time" aria-describedby="labelMaxTime" disabled>
+          </div>
+        </div>
+
+        <div class="card-footer">
+          <div class="d-flex gap-2 p-1">
+            <button id="startExport" class="btn btn-outline-success" target="_blank" aria-label="Start export">
+              START
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+     <!-- STATYSTYKI -->
+    
+    <div class="col-auto">
+      <div class="card text-bg-dark border-primary h-100" style="width: 15rem" aria-labelledby="event--title">
+        <header class="card-header border-bottom border-primary">
+          <h4 class="card-title my-2">Statystyki</h4>
+        </header>
+        <div class="card-body">
+            <h6>Ilość odczytów:</h6>
+            <h6>Poprawne:</h6>  
+            <h6>Ignorowane:</h6>
+        </div>
+        <div class="card-footer">
+          <div class="d-flex flex-column gap-2 p-1">
+            <button class="btn btn-outline-primary" id="allReadingsBtn" aria-label="Wszystkie odczyty">Wszystkie</button>
+            <button class="btn btn-outline-primary" id="validReadingsBtn" aria-label="Poprawne odczyty">Poprawne</button>
+            <button class="btn btn-outline-primary" id="ignoredReadingsBtn" aria-label="Ignorowane odczyty">Ignorowane</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="table-responsive py-3">
+    <table class="table table-striped table-hover table-sm align-middle">
+      <thead class="table-dark">
+        <tr>
+          <th>Tag</th>
+          <th>Chrono time</th>
+          <th>Race time</th>
+          <th>Urządzenie</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="live-readings-table-body">
+        <!-- Wiersze będą dodawane dynamicznie przez JavaScript -->
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+
+<div class="modal fade" id="warningModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark border-dark">
+            <div class="modal-header bg-danger border-danger">
+                <h5 class="modal-title">Ostrzeżenie</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <p class="warning-message mb-0"></p>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    OK
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block content_js %}
+
+<script>
+
+const MAX_READINGS = 500000;      
+
+const race = JSON.parse(document.getElementById('race_data').textContent);
+const control_point = JSON.parse(document.getElementById('control_point_data').textContent);
+const devices = JSON.parse(document.getElementById('devices_data').textContent);
+const gunstarts = JSON.parse(document.getElementById('gunstarts_data').textContent);
+
+console.log(race)
+
+let selectedSessionIds = {};
+
+let selectedGunStart = 0;
+let minimalTime = 0; 
+let mtbst = 60;
+
+let allReadings = [];
+let validReadings = [];
+let ignoredReadings = [];
+
+const validTimesByTag = new Map();
+const streamLastId = new Map();
+
+let counter = 0;
+
+let logFileHandle = null;
+let logQueue = [];
+let logFlushRunning = false;
+let logSequence = 1;
+
+
+// Główna funkcja procesująca batch danych
+function processReadingsBatch(batchData) {
+  if (!Array.isArray(batchData)) return;
+  
+  for (const item of batchData) {
+    if (allReadings.length >= MAX_READINGS) {
+      console.warn(`Osiągnięto maksymalny limit ${MAX_READINGS} odczytów.`);
+      break;
+    }
+
+    previous_max_id = streamLastId.get(item.stream_name) || 0
+    last_id = item.stream_tag_id
+    if (compareRedisIds(last_id, previous_max_id) <= 0) {
+      console.warn(`Odczyt z streamu ${item.stream_name} o ID ${last_id} jest starszy niż poprzedni odczyt ${previous_max_id}.`);
+      console.warn(`TAG: ${item.read.tag} CZAS: ${item.read.time}`);
+
+      counter++;
+      console.log(counter)
+    }
+    
+    const new_max_id = compareRedisIds(last_id, previous_max_id) > 0 ? last_id : previous_max_id;
+    streamLastId.set(item.stream_name, new_max_id);
+
+
+    const tag = item.read.tag;
+    const originalTime = parseFloat(item.read.time);
+    const raceTime = Math.round((originalTime - selectedGunStart) * 100) / 100;
+
+    let isIgnored = false;
+
+    if (originalTime < selectedGunStart || originalTime < minimalTime) {
+      isIgnored = true;
+    } 
+    else {
+    
+      // Pobierz lub zainicjalizuj tablicę dla danego tagu
+      let tagValidTimes = validTimesByTag.get(tag);
+      if (!tagValidTimes) {
+        tagValidTimes = [];
+        validTimesByTag.set(tag, tagValidTimes);
+      }
+
+      // Znajdź pozycję, w której ten odczyt powinien się znajdować chronologicznie
+      const insertIdx = binarySearchInsertionIndex(tagValidTimes, raceTime);
+      
+
+      // 1. Sprawdź konflikt z bezpośrednio POPRZEDNIM chronologicznie zaakceptowanym odczytem
+      if (insertIdx > 0) {
+        const prevTime = tagValidTimes[insertIdx - 1];
+        if ((raceTime - prevTime) < mtbst) {
+          isIgnored = true;
+        }
+      }
+      if (!isIgnored) {
+        tagValidTimes.splice(insertIdx, 0, raceTime);
+        
+      }
+    }
+
+    const reading = {
+      tag: tag,
+      time: originalTime,
+      race_time: raceTime,
+      device_name: item.read.device_name,
+      ignored: isIgnored
+    };
+
+    allReadings.push(reading);
+    
+    if (isIgnored) {
+      ignoredReadings.push(reading);
+    } else {
+      validReadings.push(reading);
+      queueLog(reading);
+    }
+    
+    updateLiveTable(reading);
+
+  }
+}
+
+// Funkcja pomocnicza do czyszczenia pamięci
+function resetReadingsStorage() {
+  allReadings = [];
+  validReadings = [];
+  ignoredReadings = [];
+  validTimesByTag.clear();
+  streamLastId.clear();
+  counter = 0;
+  console.log("Pamięć odczytów została wyczyszczona.");
+}
+
+
+devices.forEach(device => {
+    const select = document.getElementById(
+        `session_select_${device.device_id}`
+    );
+
+    if (!select) return;
+
+    // Wypełnienie selecta
+    if (device.sessions.length === 0) {
+        const option = document.createElement("option");
+        option.textContent = "Brak sesji";
+        option.disabled = true;
+        option.selected = true;
+
+        select.appendChild(option);
+    } else {
+        device.sessions.forEach(session => {
+            const option = document.createElement("option");
+
+            option.value = session.id;
+            option.textContent =
+                `${formatTimestamp(session.connection_time)} - ` +
+                `Odczyty: ${session.result_line}`;
+
+            select.appendChild(option);
+        });
+    }
+
+    // Domyślnie wybierz pierwszą sesję
+    if (device.sessions.length > 0) {
+        const sessionId = device.sessions[0].id;
+
+        select.value = sessionId;
+
+        selectedSessionIds[device.device_id] = {
+            session_id: sessionId
+        };
+    }
+
+    // Zmiana sesji
+    select.addEventListener("change", event => {
+        selectedSessionIds[device.device_id] = {
+            session_id: Number(event.target.value)
+        };
+
+      console.log("Zaktualizowana lista wybranych sesji:", selectedSessionIds);
+    });
+});
+
+console.log("Lista wybranych sesji:", selectedSessionIds);
+
+
+// wyswietlanie wyboru gunstartu w select
+const sortedGunStarts = [...gunstarts].sort(
+    (a, b) => b.time - a.time
+);
+
+const gunStartSelect = document.getElementById("gunStartSelect");
+
+
+// DODAWANIE GUN STARTÓW DO SELECTA
+
+sortedGunStarts.forEach((gunstart) => {
+    const option = document.createElement("option");
+
+    option.value = gunstart.time;
+    option.textContent = `${gunstart.device_name || 'XXXXX'} — ${formatTimestamp(gunstart.time)}`;
+
+    gunStartSelect.appendChild(option);
+  });
+
+
+selectedGunStart = sortedGunStarts.length
+  ? sortedGunStarts[0].time
+  : null;
+
+
+gunStartSelect.addEventListener("change", (event) => {
+  selectedGunStart = Number(event.target.value);
+  console.log("Wybrany gunstart:", selectedGunStart);
+});
+
+// TWORZENIE TABELI LIVE READINGS
+
+const tableBody = document.getElementById('live-readings-table-body');
+const MAX_TABLE_ROWS = 20;
+
+// Funkcja dodająca pojedynczy wiersz na górę tabeli i dbająca o limit 20 wierszy
+function updateLiveTable(reading) {
+  // 1. Tworzenie nowego wiersza
+  const row = document.createElement('tr');
+  
+  // Jeśli odczyt jest zignorowany, dodajemy bootstrapową klasę tła table-danger
+  if (reading.ignored) {
+    row.className = 'table-danger';
+  }
+
+  // Budowanie zawartości wiersza (używamy toFixed(2) tylko do wyświetlenia)
+  row.innerHTML = `
+    <td class="fw-bold">${reading.tag}</td>
+    <td>${formatTimestamp(reading.time)}</td>
+    <td>${formatRaceTimestamp(reading.race_time)}</td>
+    <td>${reading.device_name}</td>
+    <td>
+      <span class="badge ${reading.ignored ? 'bg-danger' : 'bg-success'}">
+        ${reading.ignored ? 'Ignorowany' : 'OK'}
+      </span>
+    </td>
+  `;
+
+  // 2. Wstawianie wiersza na samą górę tabeli
+  tableBody.insertBefore(row, tableBody.firstChild);
+
+  // 3. Usuwanie najstarszego wiersza, jeśli przekroczono limit 20
+  if (tableBody.children.length > MAX_TABLE_ROWS) {
+    tableBody.lastChild.remove();
+  }
+}
+
+// EVENT LISTENER DLA PRZYCISKU START EXPORT
+
+document.getElementById('startExport').addEventListener('click', function() {
+  if (!logFileHandle) {
+      showWarning("Brak wybranej ścieżki pliku! Wybierz ścieżkę przed rozpoczęciem.");
+      return;
+  }
+
+  resetReadingsStorage()
+
+  // Sprawdzamy, czy socket istnieje i czy połączenie jest aktywne
+  if (StreamSocket && StreamSocket.readyState === WebSocket.OPEN) {
+      
+      // Pobieramy aktualną listę ID sesji jako czystą tablicę liczb
+      const sessionIdsArray = Object.values(selectedSessionIds);
+      
+      const message = {
+          type: "start_stream",
+          selected_session_ids: selectedSessionIds
+      };
+      // Wysyłamy wiadomość przez otwarty kanał
+      StreamSocket.send(JSON.stringify(message));
+      console.log("Sent export request with sessions:", message);
+      blockState(false);
+      
+  } else {
+      console.error("Cannot start export: WebSocket connection is not ready.");
+      alert("Brak połączenia z serwerem. Spróbuj ponownie za chwilę.");
+  }
+})
+
+
+
+  /* ===========================
+        WEBSOCKET
+  ============================ */
+let StreamSocket = null
+
+function websocket_connect() {
+  const wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
+  const url = `${wsScheme}://${window.location.host}/ws/point_export/${control_point.id}/`;
+  StreamSocket = new WebSocket(url);
+  console.log('Connecting to ' + url);
+
+
+  StreamSocket.onopen = function () {
+    console.log("StreamSocket connected. Ready to start export.");
+
+    if (streamLastId.size > 0) {
+      // Jeśli mamy już jakieś odczyty, możemy wysłać wiadomość o kontynuacji
+      const message = {
+          type: "resume_stream",
+          last_ids: Object.fromEntries(streamLastId)
+      };
+      StreamSocket.send(JSON.stringify(message));
+      console.log("Sent resume request with last IDs:", message);
+    }
+  }
+
+  StreamSocket.onmessage = function (e) {
+    let data = JSON.parse(e.data);
+
+    switch (data.type) {
+      case 'history_batch':
+        console.log('History_batch: ' + data.count);
+        processReadingsBatch(data.tags);
+        break;
+
+      case 'live_batch':
+        console.log('Live_batch: ' + data.count);
+        processReadingsBatch(data.tags);
+        break;
+
+      case 'status':
+        console.log('Status: ' + data.context);
+        break;
+
+      case 'error':
+        console.warn('Error: ' + data.context);
+        break;
+
+      default:
+        console.error('Bad data: ' + data);
+        break;
+    }
+  };
+
+  StreamSocket.onclose = function () {
+    console.error('Live socket closed unexpectedly');
+    setTimeout(() => {
+      websocket_connect();
+      console.log('Reconnecting...');
+    }, 5000);
+  };
+
+} 
+
+websocket_connect();
+
+
+// EVENT LISTENER DLA PRZYCISKU SELECT FILE
+
+document.getElementById("selectFile").addEventListener("click", async () => {
+    try {
+        logFileHandle = await window.showSaveFilePicker({
+            suggestedName: formatFileName(control_point.name) + ".txt",
+            types: [{
+                description: "Plik tekstowy",
+                accept: {
+                    "text/plain": [".txt"]
+                }
+            }]
+        });
+        console.log("Wybrano plik logu.");
+        setLogFileName(logFileHandle.name);
+    } catch (err) {
+        console.error(err);
+
+
+    }
+});
+
+
+function queueLog(reading) {
+    if (!logFileHandle)
+        return;
+    logQueue.push(
+      formatLogLine(reading)
+    );
+    logSequence++;
+}
+
+
+function formatLogLine(data) {
+  const logLine = [
+       "CT01_13",
+       logSequence,
+       control_point.alias,
+       data.tag,
+       formatRaceTimestamp(data.race_time),
+       '1',
+       control_point.alias_id,
+       '1'
+     ].join(",");
+  
+  return logLine;
+}
+
+
+async function flushLogs() {
+    if (!logFileHandle)
+        return;
+    if (logFlushRunning)
+        return;
+    if (logQueue.length === 0)
+        return;
+
+    logFlushRunning = true;
+
+    try {
+        const text = logQueue.join("\n") + "\n";
+        logQueue.length = 0;
+        const file = await logFileHandle.getFile();
+        const writer = await logFileHandle.createWritable({
+            keepExistingData: true
+        });
+        await writer.seek(file.size);
+        await writer.write(text);
+        await writer.close();
+    }
+    catch (err) {
+        console.error(err);
+    }
+    finally {
+        logFlushRunning = false;
+    }
+}     
+
+setInterval(flushLogs, 1000);
+
+function formatRaceTimestamp(timestamp) {
+  let totalSeconds = parseFloat(timestamp);
+  if (isNaN(totalSeconds)) {
+    return "00:00:00.00";
+  }
+
+  // Zapamiętanie czy wartość jest ujemna i przejście na wartość bezwzględną
+  const isNegative = totalSeconds < 0;
+  totalSeconds = Math.abs(totalSeconds);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = Math.floor(totalSeconds % 60);
+  const hundredths = Math.floor(Math.round((totalSeconds % 1) * 100));
+
+  // Formatowanie z uzupełnianiem zerami z lewej strony
+  const HH = String(hours).padStart(2, '0');
+  const MM = String(minutes).padStart(2, '0');
+  const SS = String(seconds).padStart(2, '0');
+  const hs = String(hundredths).padStart(2, '0');
+
+  // Doklejenie minusa na początku, jeśli liczba była ujemna
+  const prefix = isNegative ? "-" : "";
+
+  return `${prefix}${HH}:${MM}:${SS}.${hs}`;
+}
+
+
+function formatTimestamp(timestamp) {
+  const totalSeconds = parseFloat(timestamp);
+  if (isNaN(totalSeconds) || totalSeconds < 0) {
+    return "0000-00-00 00:00:00.000";
+  }
+
+  // Obiekt Date w JS operuje na milisekundach
+  const date = new Date(totalSeconds * 1000);
+
+  // Pobieranie składowych bezpośrednio w UTC
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0'); // Miesiące są od 0 do 11
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  
+  const hours = String(date.getUTCHours()).padStart(2, '0');
+  const minutes = String(date.getUTCMinutes()).padStart(2, '0');
+  const seconds = String(date.getUTCSeconds()).padStart(2, '0');
+  const hundredths = String(Math.round((totalSeconds % 1) * 100)).padStart(2, '0');
+
+  return `${day}.${month}.${year} - ${hours}:${minutes}:${seconds}.${hundredths}`;
+}
+
+function binarySearchInsertionIndex(array, targetTime) {
+  let low = 0;
+  let high = array.length - 1;
+  
+  while (low <= high) {
+    const mid = (low + high) >> 1; // Szybkie dzielenie przez 2
+    const midValue = array[mid];
+    
+    if (midValue === targetTime) return mid;
+    if (midValue < targetTime) low = mid + 1;
+    else high = mid - 1;
+  }
+  return low;
+}
+
+
+function compareRedisIds(id1, id2) {
+  if (id1 === 0 || id1 === '0') return -1;
+  if (id2 === 0 || id2 === '0') return 1;
+  if (id1 === id2) return 0;
+
+  // Znajdujemy pozycję myślnika w obu ciągach
+  const dash1 = id1.indexOf('-');
+  const dash2 = id2.indexOf('-');
+
+  // 1. Porównujemy najpierw timestamp jako tekst (szybkie odrzucenie)
+  // Jeśli długości tekstowe przed myślnikiem są różne, dłuższy to większa liczba
+  if (dash1 !== dash2) {
+    return dash1 > dash2 ? 1 : -1;
+  }
+
+  // Jeśli długości są równe, porównujemy leksykograficznie fragmenty timestampu
+  for (let i = 0; i < dash1; i++) {
+    if (id1.charCodeAt(i) !== id2.charCodeAt(i)) {
+      return id1.charCodeAt(i) > id2.charCodeAt(i) ? 1 : -1;
+    }
+  }
+
+  // 2. Jeśli timestampy są identyczne, porównujemy sekwencję (fragment po myślniku)
+  const len1 = id1.length - dash1 - 1;
+  const len2 = id2.length - dash2 - 1;
+
+  if (len1 !== len2) {
+    return len1 > len2 ? 1 : -1;
+  }
+
+  for (let i = 1; i <= len1; i++) {
+    const char1 = id1.charCodeAt(dash1 + i);
+    const char2 = id2.charCodeAt(dash2 + i);
+    if (char1 !== char2) {
+      return char1 > char2 ? 1 : -1;
+    }
+  }
+
+  return 0;
+}
+
+function formatFileName(file_name) {
+    return file_name
+        .normalize("NFD")                      // Rozbija znaki diakrytyczne (np. 'ł' na 'l' + ogonek)
+        .replace(/[\u0300-\u036f]/g, "")       // Usuwa ogonki i kreski
+        .replace(/Ł/g, "L")                    // Poprawka dla dużej litery Ł (normalize czasem jej nie łapie)
+        .replace(/ł/g, "l")                    // Poprawka dla małej litery ł
+        .replace(/\s+/g, "_")                  // Zamienia jedną lub więcej spacji na jeden podkreślnik
+        .toLowerCase();                        // Opcjonalnie: zmienia wszystko na małe litery
+}
+
+window.addEventListener("beforeunload", (event) => {
+    event.preventDefault();
+    event.returnValue = "";
+});
+
+document.getElementById("mtbstInput").addEventListener("input", (e) => {
+    mtbst = Number(e.target.value);
+    console.log("Nowa wartość mtbst:", mtbst);
+});
+
+
+function setLogFileName(name) {
+    const element = document.getElementById('log-file-name');
+    if (element) {
+        element.textContent = name;
+    }
+}
+
+
+function showWarning(message) {
+    const modalElement = document.getElementById("warningModal");
+
+    if (!modalElement) {
+        alert(message);
+        return;
+    }
+
+    const messageElement = modalElement.querySelector(".warning-message");
+
+    if (messageElement) {
+        messageElement.textContent = message;
+    }
+
+    bootstrap.Modal.getOrCreateInstance(modalElement).show();
+}
+
+function blockState(active) {
+    const MTBSTInput = document.getElementById("mtbstInput");
+    const gunStartInput = document.getElementById("gunStartSelect");
+    if (MTBSTInput)
+      MTBSTInput.disabled = !active;
+    if (gunStartInput)
+      gunStartInput.disabled = !active;
+}
+
+id="gunStartSelect"
+
+
+</script>
+
+
+
+{% endblock %}

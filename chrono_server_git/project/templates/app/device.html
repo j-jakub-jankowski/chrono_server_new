@@ -1,0 +1,27 @@
+{% extends 'app/dashboard.html' %}
+
+{% block title %}    
+<title>Śladzik</title>
+{% endblock %}
+
+
+{% block content_dashboard %}
+
+<div class="container-fluid">
+  <div class="row justify-content-center g-3">
+    
+    <ul>
+    {% for point in points %}
+        <li>
+            <a href="{% url 'point_all' point.id %}">
+                {{ point.name }}
+            </a>
+        </li>
+    {% endfor %}
+    </ul>
+
+  </div>
+</div>
+
+
+{% endblock %}

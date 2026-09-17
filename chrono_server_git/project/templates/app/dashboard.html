@@ -1,0 +1,108 @@
+{% extends 'app/base.html' %}
+
+{% block head_js %}  
+    
+{% endblock %}
+
+{% block content_html %}
+<!-- Górny pasek nawigacji -->
+<nav class="navbar navbar-expand navbar-dark bg-dark border-bottom z-3 position-relative p-0">
+  <div class="container-fluid p-0">
+
+    <!-- Lewa część - dokładnie szerokość sidebara -->
+    <div class="sidebar-header col-2 col-md-3 col-lg-2 d-flex justify-content-center align-items-center">
+      <a class="navbar-brand m-0" href="{% url 'index' %}">
+        ŚLADZIK <i class="fa-solid fa-stopwatch"></i>
+      </a>
+    </div>
+
+    <!-- Prawa część - breadcrumbs + login -->
+    <div class="col-10 col-md-9 col-lg-10 d-flex align-items-center">
+
+      <nav aria-label="breadcrumb" class="ms-3">
+        <ol class="breadcrumb mb-0">
+          <li class="breadcrumb-item">
+            <a class="text-white fs-5" href="{% url 'index' %}">
+              <i class="fa-solid fa-house"></i>
+            </a>
+          </li>
+
+          {% block breadcrumb_html %}
+          {% endblock %}
+        </ol>
+      </nav>
+
+      <a class="btn btn-outline-primary ms-auto me-3"
+         href="{% url 'admin:index' %}">
+        Login
+      </a>
+
+    </div>
+
+  </div>
+</nav>
+
+<!-- Główny układ strony (Sidebar + Treść) -->
+<div class="container-fluid flex-grow-1 d-flex p-0" style="min-height: 0;">
+  <div class="row g-0 w-100 flex-grow-1">
+    
+    <!-- Panel boczny (Sidebar) -->
+    <div class="sidebar col-2 col-md-3 col-lg-2 border-end border-white-50 d-flex flex-column p-0"> 
+      <div class="d-flex flex-column p-2 pt-4 overflow-y-auto h-100"> 
+        <ul class="nav nav-pills flex-column mb-auto gap-1"> 
+          
+          <!-- PODSTRONA: DEVICE (Z rozwijanym menu) -->
+          <li class="nav-item"> 
+            <a class="nav-link d-flex align-items-center justify-content-center justify-content-md-start gap-2 text-white" 
+               data-bs-toggle="collapse" href="#deviceSubmenu" role="button" aria-expanded="false"> 
+              <i class="fa-solid fa-mobile-screen-button fa-fw text-white-50 fs-5"></i>
+              <span class="d-none d-md-inline">Urządzenia</span>
+              <i class="fa-solid fa-chevron-down ms-auto d-none d-md-inline small text-white-50"></i>
+            </a> 
+            
+            <!-- Kontener podmenu dla Device -->
+            <div class="collapse" id="deviceSubmenu">
+              <ul class="nav flex-column ps-3 pt-1 gap-1 small">
+                <!-- Zawsze widoczne pierwsze 5 podstron urządzenia -->
+                {% comment %} <li class="nav-item"><a class="nav-link text-white-50 p-1" href="#">Subpage 1</a></li>
+                <li class="nav-item"><a class="nav-link text-white-50 p-1" href="#">Subpage 2</a></li>
+                <li class="nav-item"><a class="nav-link text-white-50 p-1" href="#">Subpage 3</a></li>
+                <li class="nav-item"><a class="nav-link text-white-50 p-1" href="#">Subpage 4</a></li>
+                <li class="nav-item"><a class="nav-link text-white-50 p-1" href="#">Subpage 5</a></li> {% endcomment %}
+              </ul>
+            </div>
+          </li> 
+
+
+
+          <!-- PODSTRONA: RACE -->
+          <li class="nav-item"> 
+            <a class="nav-link d-flex align-items-center justify-content-center justify-content-md-start gap-2 text-white" href="{% url 'index' %}"> 
+              <i class="fa-solid fa-flag-checkered fa-fw text-white-50 fs-5"></i>
+              <span class="d-none d-md-inline">Zawody</span>
+            </a> 
+          </li> 
+
+        </ul> 
+      </div> 
+    </div>
+
+
+    <!-- Dynamiczny obszar na treść szczegółową podstron -->
+    <div class="col-10 col-md-9 col-lg-10 p-3 overflow-y-auto h-100">
+      {% block content_dashboard %}
+      {% endblock %}
+    </div>
+
+  </div>
+</div>
+
+<!-- Stopka strony -->
+<footer class="footer border-top bg-dark text-light">
+  <div class="ms-3 my-3">mail: jakub@sladzik.pl</div>
+</footer>
+{% endblock %}    
+
+{% block content_js %}
+
+{% endblock %}

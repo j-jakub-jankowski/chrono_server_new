@@ -1,0 +1,63 @@
+{% extends 'app/dashboard.html' %}
+
+{% block title %}    
+<title>Śladzik</title>
+{% endblock %}
+
+
+
+
+{% block content_dashboard %}
+
+
+<div class="container-fluid">
+  <div class="row justify-content-center g-3">
+    {% for race in races %}
+      {% with border_class=race.active|yesno:"border-success,border-primary" btn_class=race.active|yesno:"btn-outline-success,btn-outline-primary" %}
+        <div class="col-auto">
+          <div class="card text-bg-dark {{ border_class }} h-100" style="width: 18rem" aria-labelledby="event-{{ race.id }}-title">
+            <div class="card-header">
+              <h4 class="card-title my-2">{{ race.name }}</h4>
+            </div>
+            <div class="card-body">
+              <h6>Punkty: </h6>
+              {% for point in race.control_points %}
+                <a class="nav-link d-block ms-3 my-1" href="{% url 'point' race.id point.id %}" aria-label="Punkty{{ race.name }}">{{ point.name }}</a>
+              {% endfor %}
+            </div>
+            <div class="card-footer">
+              <div class="d-flex gap-2 p-1">
+                <a href="{% url 'race' race.id %}" class="btn {{ btn_class }}" aria-label="Ustawienia {{ race.name }}"><i class="fa-solid fa-gear"></i></a>
+                <a href="{% url 'point_all' race.id %}" class="btn {{ btn_class }}" aria-label="Punkty{{ race.name }}">Punkty</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endwith %}
+    {% empty %}
+      <div class="col-12">
+        <div class="alert alert-secondary text-center mb-0">Brak wydarzeń do wyświetlenia.</div>
+      </div>
+    {% endfor %}
+    <div class="col-auto">
+      <div class="card text-bg-dark border-primary h-100" style="width: 18rem" aria-labelledby="event-{{ race.id }}-title">
+        <div class="card-header">
+          <h4 class="card-title my-2">Dodaj zawody</h4>
+        </div>
+        <div class="card-body">
+            
+        </div>
+        <div class="card-footer">
+          <div class="d-flex gap-2 p-1">
+            <a href="#" class="btn btn-outline-primary" aria-label="Dodaj nowy"><i class="fa-solid fa-plus"></i></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+{% endblock %}
